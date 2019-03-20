@@ -26,7 +26,6 @@ def getChannelsFromOrig(img):
 def openImg(fPath):
     return skio.imread(fPath)
 
-
 def colorizeGorskiiImg(fPath):
     img = openImg(fPath)
     rc, gc, bc = getChannelsFromOrig(img)
