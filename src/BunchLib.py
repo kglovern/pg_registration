@@ -127,14 +127,15 @@ def colorizeGorskiiImgNaive(fPath):
 def colorizeGorskiiImgWirth(fPath):
     img = openImg(fPath)
     rc, gc, bc = getChannelsFromOrig(img)
-    bc = alignChannels(bc, gc)
+    # Alteration:  Register both to Red for more accuracy instead of G to R and B to G
     gc = alignChannels(gc, rc)
+    bc = alignChannels(bc, rc)
     # Channel comparisons
     saveImg (rc, "red.png")
     saveImg(gc, "green.png")
     saveImg(bc, "blue.png")
     combined = combineChannels(rc, gc, bc)
-    # output image that hopefuilly doesn't suck
+    # output image that hopefully doesn't suck
     saveImg(combined, "output_wirth.png")
 
 
