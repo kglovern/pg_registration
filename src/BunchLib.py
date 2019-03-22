@@ -50,12 +50,11 @@ def shiftImage(img, xOff, yOff):
     trans = sktx.AffineTransform(translation=(xOff, yOff))
     return sktx.warp(img, trans)
 
-def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24):
+def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrLevel=4):
     bestX = 0
     bestY = 0
     shiftChanged = 0
     maxSSIM = 0
-    pyrLevel = 3
 
     iWidth, iHeight = ref.shape
     xStart = int(xOff * iWidth)
@@ -77,7 +76,7 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24):
         for yOff in range(int(-0.5 * numMoves), int(0.5 * numMoves)):
             for xOff in range (int(-0.5 * numMoves), int(0.5 * numMoves)):
                 dRef = getDownscaledWindow(modRef, xStart + xOff, yStart + yOff, wWidth, curScale)
-                curSSIM = ssim(dTarget, dRef)
+                curSSIM = ssim(dRef, dTarget)
                 if curSSIM > maxSSIM:
                     shiftChanged = True
                     maxSSIM = curSSIM
@@ -85,9 +84,12 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24):
                     bestY = yOff
                     print (f"New Max at {xOff}, {yOff}: {maxSSIM}")
 
-        # Shift original channel
-        xShift = bestX * math.pow(2, (pyrLevel - 1))
-        yShift = bestY * math.pow(2, (pyrLevel - 1))
+        # Shift original channel - pyramids
+        #xShift = bestX * math.pow(2, (pyrLevel - 1))
+        #yShift = bestY * math.pow(2, (pyrLevel - 1))
+        xShift = bestX
+        yShift = bestY
+        print(f"Shift: {xShift}, {yShift}")
         if shiftChanged:
             modRef = shiftImage(modRef, xShift, yShift)
         curScale = 2 * curScale
@@ -112,7 +114,7 @@ def combineChannels(r, g, b):
     return np.dstack((r, g, b))
 
 def to8Bit(img):
-    return skimage.img_as_ubyte(img)
+    return sk.img_as_ubyte(img)
 
 def colorizeGorskiiImgNaive(fPath):
     img = openImg(fPath)
