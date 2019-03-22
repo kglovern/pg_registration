@@ -10,6 +10,7 @@ def main():
         if (os.path.isdir(imgPath)):
             print("NYI")
         else:
+            bl.colorizeGorskiiImgNaive(imgPath)
             bl.colorizeGorskiiImgWirth(imgPath)
 
 if __name__ == "__main__":
