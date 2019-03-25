@@ -10,12 +10,16 @@ import time
 import math
 import glob
 import os
+import warnings
+
+# TOFIX: The low res warnings from conversion.  For now just suppress them
+warnings.filterwarnings("ignore")
 
 def getImgHeight(img):
     return np.floor(img.shape[0])
 
 def getOperationTime(start, end):
-    return time =  end - start
+    return end - start
 
 def cropImg(img, amt=0.1):
     height, width = img.shape
@@ -59,7 +63,7 @@ def shiftImage(img, xOff, yOff):
 def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrLevel=4):
     bestX = 0
     bestY = 0
-    shiftChanged = 0
+    shiftChanged = False
     maxSSIM = 0
 
     iWidth, iHeight = ref.shape
@@ -67,7 +71,7 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrL
     yStart = int(yOff * iHeight)
     wWidth = int(wSize * iWidth)
 
-    # Initial downscale at 1/8th resolution
+    # Initial downscale at 1/8th resolution - TODO: use Pyrlevel to calculate
     curScale = 1.0 / 8.0
 
     modRef = ref
@@ -101,8 +105,8 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrL
         curScale = 2 * curScale
         pyrLevel -= 1
     end = time.time()
-    time = getOperationTime(start, end)
-    return modRef, time
+    opTime = getOperationTime(start, end)
+    return modRef, opTime
 
 def saveImg(img, fPath):
     skio.imsave(fPath, img)
@@ -176,5 +180,8 @@ def runOnDir(imgDir):
     files = glob.iglob(f"{imgDir}/**/*", recursive=True)
     for file in files:
         makeOutputDir(file)
-        colorizeGorskiiImgWirth(file)
+        print(f"\nRunning Naive on {file}")
         colorizeGorskiiImgNaive(file)
+        print(f"\nRunning Wirth on {file}")
+        opTime = colorizeGorskiiImgWirth(file)
+        print(f"Runtime: {opTime}")
