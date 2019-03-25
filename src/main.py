@@ -8,7 +8,7 @@ def main():
     else:
         imgPath = sys.argv[1]
         if (os.path.isdir(imgPath)):
-            print("NYI")
+            bl.runOnDir(imgPath)
         else:
             bl.colorizeGorskiiImgNaive(imgPath)
             bl.colorizeGorskiiImgWirth(imgPath)

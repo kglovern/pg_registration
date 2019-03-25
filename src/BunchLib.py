@@ -1,12 +1,15 @@
 import numpy as np
 import skimage as sk
 import skimage.io as skio
+import scipy.misc as skmisc
 import skimage.transform as sktx
 from scipy.ndimage import fourier_shift
 import matplotlib.pyplot as plt
 from skimage.measure import compare_ssim as ssim
 import time
 import math
+import glob
+import os
 
 def getImgHeight(img):
     return np.floor(img.shape[0])
@@ -16,7 +19,12 @@ def printOperationTime(start, end):
     print(f"Operation took {time} seconds")
 
 def cropImg(img, amt=0.1):
-    pass
+    height, width = img.shape
+    cropHeight = amt * height
+    cropWidth = amt * width
+    height = height - cropHeight
+    width = width - cropWidth
+    return img[int(cropHeight / 2):int(height-(cropHeight/2)), int(cropWidth / 2):int(width-(cropWidth/2))]
 
 def getChannelsFromOrig(img):
     img = sk.img_as_float(img)
@@ -31,7 +39,6 @@ def getChannelsFromOrig(img):
     blue = img[:blueEnd]
     green = img[blueEnd:greenEnd]
     red = img[greenEnd:redEnd] # Need redEnd to account for rounding issues leading to one channel being larger than the others
-
 
     return red, green, blue
 
@@ -82,14 +89,14 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrL
                     maxSSIM = curSSIM
                     bestX = xOff
                     bestY = yOff
-                    print (f"New Max at {xOff}, {yOff}: {maxSSIM}")
+                    # print (f"New Max at {xOff}, {yOff}: {maxSSIM}")
 
         # Shift original channel - pyramids
         #xShift = bestX * math.pow(2, (pyrLevel - 1))
         #yShift = bestY * math.pow(2, (pyrLevel - 1))
         xShift = bestX
         yShift = bestY
-        print(f"Shift: {xShift}, {yShift}")
+        #print(f"Shift: {xShift}, {yShift}")
         if shiftChanged:
             modRef = shiftImage(modRef, xShift, yShift)
         curScale = 2 * curScale
@@ -101,8 +108,6 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrL
 def saveImg(img, fPath):
     skio.imsave(fPath, img)
 
-def cropImgFromCenter(img, percentage=0.1):
-    pass
 
 def showImageAsFigure(img):
     plt.figure()
@@ -117,26 +122,59 @@ def to8Bit(img):
     return sk.img_as_ubyte(img)
 
 def colorizeGorskiiImgNaive(fPath):
+    filename = getFileName(fPath)
+    oDir = f"results/{filename}"
+
     img = openImg(fPath)
     # Downsample from 16 to 8 bit grayscale
     img = to8Bit(img)
     rc, gc, bc = getChannelsFromOrig(img)
     combined = combineChannels(rc, gc, bc)
-    saveImg(combined, "output_naive.png")
+    saveImg(combined, f"{oDir}/naive.png")
+
+def getFileName(fPath):
+    fileName = fPath.split('/')[-1]
+    return fileName.split('.')[0]
+
+def makeOutputDir(file):
+    filename = getFileName(file)
+    oDir = os.getcwd() + f"/results/{filename}"
+    if not os.path.isdir(oDir):
+        os.mkdir(oDir)
 
 def colorizeGorskiiImgWirth(fPath):
+    filename = getFileName(fPath)
+    oDir = f"results/{filename}"
+
     img = openImg(fPath)
     rc, gc, bc = getChannelsFromOrig(img)
+
     # Alteration:  Register both to Red for more accuracy instead of G to R and B to G
     gc = alignChannels(gc, rc)
     bc = alignChannels(bc, rc)
     # Channel comparisons
-    saveImg (rc, "red.png")
-    saveImg(gc, "green.png")
-    saveImg(bc, "blue.png")
+    saveImg (rc, f"{oDir}/red.png")
+    saveImg(gc, f"{oDir}/green.png")
+    saveImg(bc, f"{oDir}/blue.png")
+
+    # Remove 10% around the border for each channel
+    rc = cropImg(rc)
+    gc = cropImg(gc)
+    bc = cropImg(bc)
+
     combined = combineChannels(rc, gc, bc)
     # output image that hopefully doesn't suck
-    saveImg(combined, "output_wirth.png")
+    saveImg(combined, f"{oDir}/wirth.png")
 
 
+def runOnDir(imgDir):
 
+    curDir = os.getcwd()
+    resultsDir = f"{curDir}/results"
+    if not os.path.isdir(resultsDir):
+        os.mkdir(resultsDir)
+    files = glob.iglob(f"{imgDir}/**/*", recursive=True)
+    for file in files:
+        makeOutputDir(file)
+        colorizeGorskiiImgWirth(file)
+        colorizeGorskiiImgNaive(file)
