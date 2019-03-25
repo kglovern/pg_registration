@@ -14,9 +14,8 @@ import os
 def getImgHeight(img):
     return np.floor(img.shape[0])
 
-def printOperationTime(start, end):
-    time =  end - start
-    print(f"Operation took {time} seconds")
+def getOperationTime(start, end):
+    return time =  end - start
 
 def cropImg(img, amt=0.1):
     height, width = img.shape
@@ -102,8 +101,8 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrL
         curScale = 2 * curScale
         pyrLevel -= 1
     end = time.time()
-    printOperationTime(start, end)
-    return modRef
+    time = getOperationTime(start, end)
+    return modRef, time
 
 def saveImg(img, fPath):
     skio.imsave(fPath, img)
@@ -150,8 +149,8 @@ def colorizeGorskiiImgWirth(fPath):
     rc, gc, bc = getChannelsFromOrig(img)
 
     # Alteration:  Register both to Red for more accuracy instead of G to R and B to G
-    gc = alignChannels(gc, rc)
-    bc = alignChannels(bc, rc)
+    gc, timeG = alignChannels(gc, rc)
+    bc, timeB = alignChannels(bc, rc)
     # Channel comparisons
     saveImg (rc, f"{oDir}/red.png")
     saveImg(gc, f"{oDir}/green.png")
@@ -165,6 +164,7 @@ def colorizeGorskiiImgWirth(fPath):
     combined = combineChannels(rc, gc, bc)
     # output image that hopefully doesn't suck
     saveImg(combined, f"{oDir}/wirth.png")
+    return timeG + timeB
 
 
 def runOnDir(imgDir):
