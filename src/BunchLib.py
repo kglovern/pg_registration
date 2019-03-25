@@ -15,11 +15,14 @@ import warnings
 # TOFIX: The low res warnings from conversion.  For now just suppress them
 warnings.filterwarnings("ignore")
 
+
 def getImgHeight(img):
     return np.floor(img.shape[0])
 
+
 def getOperationTime(start, end):
     return end - start
+
 
 def cropImg(img, amt=0.1):
     height, width = img.shape
@@ -27,7 +30,8 @@ def cropImg(img, amt=0.1):
     cropWidth = amt * width
     height = height - cropHeight
     width = width - cropWidth
-    return img[int(cropHeight / 2):int(height-(cropHeight/2)), int(cropWidth / 2):int(width-(cropWidth/2))]
+    return img[int(cropHeight / 2):int(height - (cropHeight / 2)), int(cropWidth / 2):int(width - (cropWidth / 2))]
+
 
 def getChannelsFromOrig(img):
     img = sk.img_as_float(img)
@@ -41,24 +45,30 @@ def getChannelsFromOrig(img):
 
     blue = img[:blueEnd]
     green = img[blueEnd:greenEnd]
-    red = img[greenEnd:redEnd] # Need redEnd to account for rounding issues leading to one channel being larger than the others
+    # Need redEnd to account for rounding issues leading to one channel being larger than the others
+    red = img[greenEnd:redEnd]
 
     return red, green, blue
+
 
 def openImg(fPath):
     return skio.imread(fPath)
 
+
 def getWindow(img, xStart, yStart, width):
-    return img[yStart:yStart+width, xStart:xStart+width]
+    return img[yStart:yStart + width, xStart:xStart + width]
+
 
 def getDownscaledWindow(img, xStart, yStart, width, scale):
     retImg = getWindow(img, xStart, yStart, width)
     retImg = sktx.rescale(retImg, scale, mode="reflect", anti_aliasing=False, multichannel=False)
     return retImg
 
+
 def shiftImage(img, xOff, yOff):
     trans = sktx.AffineTransform(translation=(xOff, yOff))
     return sktx.warp(img, trans)
+
 
 def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrLevel=4):
     bestX = 0
@@ -84,7 +94,7 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrL
         bestY = 0
         dTarget = getDownscaledWindow(target, xStart, yStart, wWidth, curScale)
         for yOff in range(int(-0.5 * numMoves), int(0.5 * numMoves)):
-            for xOff in range (int(-0.5 * numMoves), int(0.5 * numMoves)):
+            for xOff in range(int(-0.5 * numMoves), int(0.5 * numMoves)):
                 dRef = getDownscaledWindow(modRef, xStart + xOff, yStart + yOff, wWidth, curScale)
                 curSSIM = ssim(dRef, dTarget)
                 if curSSIM > maxSSIM:
@@ -99,7 +109,7 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrL
         #yShift = bestY * math.pow(2, (pyrLevel - 1))
         xShift = bestX
         yShift = bestY
-        #print(f"Shift: {xShift}, {yShift}")
+        # print(f"Shift: {xShift}, {yShift}")
         if shiftChanged:
             modRef = shiftImage(modRef, xShift, yShift)
         curScale = 2 * curScale
@@ -108,7 +118,12 @@ def alignChannels(ref, target, xOff=0.4, yOff=0.4, wSize=0.38, numMoves=24, pyrL
     opTime = getOperationTime(start, end)
     return modRef, opTime
 
+
 def saveImg(img, fPath):
+    directory = "/".join(fPath.split("/")[:-1])
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+
     skio.imsave(fPath, img)
 
 
@@ -118,11 +133,14 @@ def showImageAsFigure(img):
     plt.show()
     plt.clf()
 
+
 def combineChannels(r, g, b):
     return np.dstack((r, g, b))
 
+
 def to8Bit(img):
     return sk.img_as_ubyte(img)
+
 
 def colorizeGorskiiImgNaive(fPath):
     filename = getFileName(fPath)
@@ -135,15 +153,18 @@ def colorizeGorskiiImgNaive(fPath):
     combined = combineChannels(rc, gc, bc)
     saveImg(combined, f"{oDir}/naive.png")
 
+
 def getFileName(fPath):
     fileName = fPath.split('/')[-1]
     return fileName.split('.')[0]
+
 
 def makeOutputDir(file):
     filename = getFileName(file)
     oDir = os.getcwd() + f"/results/{filename}"
     if not os.path.isdir(oDir):
         os.mkdir(oDir)
+
 
 def colorizeGorskiiImgWirth(fPath):
     filename = getFileName(fPath)
@@ -156,7 +177,7 @@ def colorizeGorskiiImgWirth(fPath):
     gc, timeG = alignChannels(gc, rc)
     bc, timeB = alignChannels(bc, rc)
     # Channel comparisons
-    saveImg (rc, f"{oDir}/red.png")
+    saveImg(rc, f"{oDir}/red.png")
     saveImg(gc, f"{oDir}/green.png")
     saveImg(bc, f"{oDir}/blue.png")
 
