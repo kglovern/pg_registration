@@ -64,8 +64,8 @@ def openImg(fPath):
 
 def getWindow(img, xOff, yOff, wX=0.4, wY=0.4, wSize=0.38):
     iWidth, iHeight = img.shape
-    xStart = int(wX * iWidth)
-    yStart = int(wY * iHeight)
+    xStart = int(wX * iWidth) + xOff
+    yStart = int(wY * iHeight) + yOff
     width = int(wSize * iWidth)
     return img[yStart:yStart + width, xStart:xStart + width]
 
@@ -76,8 +76,6 @@ def shiftImage(img, xOff, yOff):
 def getPyramidArray(img, levels):
     pyramids =  list(sktx.pyramid_gaussian(img, max_layer=(levels-1)))
     pyramids.reverse()
-    #for i in range(0, levels):
-    #    saveImg(pyramids[i], f"results/{i}_pyr.png")
     return pyramids
 
 def alignChannels(ref, target, numMoves=24, pyrLevel=4):
