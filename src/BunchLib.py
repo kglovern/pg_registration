@@ -78,11 +78,23 @@ def getPyramidArray(img, levels):
     pyramids.reverse()
     return pyramids
 
-def alignChannels(ref, target, numMoves=24, pyrLevel=4):
+def getChannelResolution(img):
+    iWidth, iHeight = img.shape
+    if iWidth < 500:
+        print("Looks low resolution - using 3 levels and 12 moves")
+        return 3, 12
+    else:
+        print("Looks high resolution - using 4 levels and 24 moves")
+        return 4, 24
+
+def alignChannels(ref, target):
     bestX = 0
     bestY = 0
     shiftChanged = False
     maxSSIM = 0
+
+    # Determine how many levels of the pyramid/moves from image resolution
+    pyrLevel, numMoves = getChannelResolution(target)
     targetPyr = getPyramidArray(target, pyrLevel)
 
     modRef = ref
@@ -95,12 +107,9 @@ def alignChannels(ref, target, numMoves=24, pyrLevel=4):
         bestY = 0
         refPyr = getPyramidArray(modRef, pyrLevel) # new Pyramid after each alteration
         dTarget = getWindow(targetPyr[i], 0, 0)
-        saveImg(dTarget, f"results/{i}_target.png")
         for yOff in range(int(-0.5 * numMoves), int(0.5 * numMoves)):
             for xOff in range(int(-0.5 * numMoves), int(0.5 * numMoves)):
                 dRef = getWindow(refPyr[i], xOff, yOff)
-                if not shiftChanged:
-                    saveImg(dRef, f"results/{i}_ref.png")
                 curSSIM = ssim(dRef, dTarget)
                 if curSSIM > maxSSIM:
                     shiftChanged = True
@@ -126,9 +135,11 @@ def showImageAsFigure(img):
     plt.show()
     plt.clf()
 
+
 def getFileName(fPath):
     fileName = fPath.split('/')[-1]
     return fileName.split('.')[0]
+
 
 def makeOutputDir(file):
     filename = getFileName(file)
@@ -184,7 +195,6 @@ def colorizeGorskiiImgWirth(fPath):
 
 
 def runOnDir(imgDir):
-
     curDir = os.getcwd()
     resultsDir = f"{curDir}/results"
     if not os.path.isdir(resultsDir):
