@@ -15,6 +15,7 @@ import warnings
 # TOFIX: The low res warnings from conversion.  For now just suppress them
 warnings.filterwarnings("ignore")
 
+
 def saveImg(img, fPath):
     directory = "/".join(fPath.split("/")[:-1])
     if not os.path.isdir(directory):
@@ -69,14 +70,15 @@ def getWindow(img, xOff, yOff, wX=0.4, wY=0.4, wSize=0.38):
     width = int(wSize * iWidth)
     return img[yStart:yStart + width, xStart:xStart + width]
 
+
 def shiftImage(img, xOff, yOff):
     trans = sktx.AffineTransform(translation=(xOff, yOff))
     return sktx.warp(img, trans)
 
+
 def getPyramidArray(img, levels):
-    pyramids =  list(sktx.pyramid_gaussian(img, max_layer=(levels-1)))
-    pyramids.reverse()
-    return pyramids
+    return np.flip(list(sktx.pyramid_gaussian(img, max_layer=(levels - 1))))
+
 
 def getChannelResolution(img):
     iWidth, iHeight = img.shape
@@ -87,6 +89,8 @@ def getChannelResolution(img):
         print("Looks high resolution - using 4 levels and 24 moves")
         return 4, 24
 
+
+# Using ssim to align the two channels
 def alignChannels(ref, target):
     bestX = 0
     bestY = 0
@@ -100,15 +104,17 @@ def alignChannels(ref, target):
     modRef = ref
     start = time.time()
     curLevel = pyrLevel
+    minIndex = int(-0.5 * numMoves)
+    maxIndex = int(0.5 * numMoves)
     for i in range(0, pyrLevel):
-        print(f"Pyramid Level {i+1}")
+        print(f"\nPyramid Level {i+1}")
         shiftChanged = False
         bestX = 0
         bestY = 0
-        refPyr = getPyramidArray(modRef, pyrLevel) # new Pyramid after each alteration
+        refPyr = getPyramidArray(modRef, pyrLevel)  # new Pyramid after each alteration
         dTarget = getWindow(targetPyr[i], 0, 0)
-        for yOff in range(int(-0.5 * numMoves), int(0.5 * numMoves)):
-            for xOff in range(int(-0.5 * numMoves), int(0.5 * numMoves)):
+        for yOff in range(minIndex, maxIndex):
+            for xOff in range(minIndex, maxIndex):
                 dRef = getWindow(refPyr[i], xOff, yOff)
                 curSSIM = ssim(dRef, dTarget)
                 if curSSIM > maxSSIM:
@@ -116,7 +122,7 @@ def alignChannels(ref, target):
                     maxSSIM = curSSIM
                     bestX = xOff
                     bestY = yOff
-                    print (f"New Max at {xOff}, {yOff}: {maxSSIM}")
+                    print(f"New Max at {xOff}, {yOff}: {maxSSIM}")
         if shiftChanged:
             xShift = bestX * math.pow(2, (curLevel - 1))
             yShift = bestY * math.pow(2, (curLevel - 1))
