@@ -179,6 +179,7 @@ def colorizeGorskiiImgWirth(fPath):
     oDir = f"results/{filename}"
 
     img = openImg(fPath)
+    img = to8Bit(img) # Forgot to do this for the hard one...
     rc, gc, bc = getChannelsFromOrig(img)
 
     # Alteration:  Register both to Red for more accuracy instead of G to R and B to G
