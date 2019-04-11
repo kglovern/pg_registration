@@ -78,15 +78,15 @@ def shiftImage(img, xOff, yOff):
 
 
 def getPyramidArray(img, levels):
-    return np.flip(list(sktx.pyramid_gaussian(img, max_layer=(levels - 1))))
-    # return np.flip(list(sktx.pyramid_laplacian(img, max_layer=(levels - 1))))
+    # return np.flip(list(sktx.pyramid_gaussian(img, max_layer=(levels - 1))))
+    return np.flip(list(sktx.pyramid_laplacian(img, max_layer=(levels - 1))))
 
 
 def getChannelResolution(img):
     iWidth, iHeight = img.shape
     if iWidth < 500:
-        print("Looks low resolution - using 3 levels and 12 moves")
-        return 3, 12
+        print("Looks low resolution - using 3 levels and 10 moves")
+        return 3, 10
     else:
         print("Looks high resolution - using 4 levels and 24 moves")
         return 4, 24
