@@ -19,3 +19,16 @@ A number of images are generated - each of the colour channels are exported sepa
 If you want to run a set of images, just point the script at an entire directory.
 
 "python3 src/main.py <path/to/images/>
+
+
+# Source
+
+main.py is a wrapper that calls our library.
+
+All functionality is located in BunchLib.py.  Relevant functions that you might actually care about include:
+
+- alignChannels - our actual alignment algorithm
+- colorizeGorskiiImgWirth - wrapper that calls the above and exports channels
+- colorizeGorskiiImgNaive - wrapper that creates the naive version of the image
+
+The rest are largely helper functions and import/export functionality
