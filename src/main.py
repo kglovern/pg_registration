@@ -2,6 +2,7 @@ import BunchLib as bl
 import sys
 import os
 
+
 def main():
     if (len(sys.argv) < 2):
         print("Usage: main.py <image path>")

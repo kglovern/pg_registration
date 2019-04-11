@@ -4,6 +4,7 @@ import skimage.io as skio
 import scipy.misc as skmisc
 import skimage.transform as sktx
 from scipy.ndimage import fourier_shift
+from skimage.morphology import reconstruction
 import matplotlib.pyplot as plt
 from skimage.measure import compare_ssim as ssim
 import time
@@ -78,6 +79,7 @@ def shiftImage(img, xOff, yOff):
 
 def getPyramidArray(img, levels):
     return np.flip(list(sktx.pyramid_gaussian(img, max_layer=(levels - 1))))
+    # return np.flip(list(sktx.pyramid_laplacian(img, max_layer=(levels - 1))))
 
 
 def getChannelResolution(img):
@@ -150,6 +152,7 @@ def getFileName(fPath):
 def makeOutputDir(file):
     filename = getFileName(file)
     oDir = os.getcwd() + f"/results/{filename}"
+
     if not os.path.isdir(oDir):
         os.mkdir(oDir)
 
@@ -162,29 +165,52 @@ def to8Bit(img):
     return sk.img_as_ubyte(img)
 
 
+def getResDir(width):
+    if width < 500:
+        return "lowres/"
+    elif width < 2000:
+        return "midres/"
+    else:
+        return "highres/"
+
+
 def colorizeGorskiiImgNaive(fPath):
-    filename = getFileName(fPath)
+    img = openImg(fPath)
+
+    filename = getResDir(img.shape[1]) + getFileName(fPath)
     oDir = f"results/{filename}"
 
-    img = openImg(fPath)
     # Downsample from 16 to 8 bit grayscale
     img = to8Bit(img)
     rc, gc, bc = getChannelsFromOrig(img)
+
     combined = combineChannels(rc, gc, bc)
+
     saveImg(combined, f"{oDir}/naive.png")
 
 
+def originalAlignment(rc, gc, bc):
+    bc, timeB = alignChannels(bc, gc)
+    gc, timeG = alignChannels(gc, rc)
+    return gc, timeG, bc, timeB
+
+
 def colorizeGorskiiImgWirth(fPath):
-    filename = getFileName(fPath)
+    img = openImg(fPath)
+
+    filename = getResDir(img.shape[1]) + getFileName(fPath)
     oDir = f"results/{filename}"
 
-    img = openImg(fPath)
-    img = to8Bit(img) # Forgot to do this for the hard one...
+    img = to8Bit(img)  # Forgot to do this for the hard one...
     rc, gc, bc = getChannelsFromOrig(img)
 
     # Alteration:  Register both to Red for more accuracy instead of G to R and B to G
     gc, timeG = alignChannels(gc, rc)
     bc, timeB = alignChannels(bc, rc)
+
+    # OG Alignment
+    # gc, timeG, bc, timeB = originalAlignment(rc, gc, bc)
+
     # Channel comparisons
     saveImg(rc, f"{oDir}/red.png")
     saveImg(gc, f"{oDir}/green.png")
@@ -196,8 +222,10 @@ def colorizeGorskiiImgWirth(fPath):
     bc = cropImg(bc)
 
     combined = combineChannels(rc, gc, bc)
+
     # output image that hopefully doesn't suck
     saveImg(combined, f"{oDir}/wirth.png")
+
     return timeG + timeB
 
 
