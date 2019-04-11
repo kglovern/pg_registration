@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import skimage as sk
 import skimage.io as skio
@@ -16,11 +18,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def saveImg(img, fPath):
-    directory = "/".join(fPath.split("/")[:-1])
-    if not os.path.isdir(directory):
-        os.makedirs(directory)
+    path = Path(fPath)
+    # Make all of the parent directories for this file
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-    skio.imsave(fPath, img)
+    skio.imsave(str(path), img)
 
 
 def getImgHeight(img):
@@ -137,8 +139,7 @@ def showImageAsFigure(img):
 
 
 def getFileName(fPath):
-    fileName = fPath.split('/')[-1]
-    return fileName.split('.')[0]
+    return Path(fPath).name
 
 
 def makeOutputDir(file):
