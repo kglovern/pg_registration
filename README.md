@@ -1,3 +1,7 @@
+# Readme
+
+Note that we did not include the high-definition versions of the images in this submission.  This is due to file size concerns.  They are available online if you want to re-run that particular set yourself.
+
 # Dependencies
 
 skimage

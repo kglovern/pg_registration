@@ -176,9 +176,14 @@ def colorizeGorskiiImgWirth(fPath):
     img = to8Bit(img) # Forgot to do this for the hard one...
     rc, gc, bc = getChannelsFromOrig(img)
 
-    # Alteration:  Register both to Red for more accuracy instead of G to R and B to G
-    gc, timeG = alignChannels(gc, rc)
+    Alteration:  Register both to Red for more accuracy instead of G to R and B to G
+    gc, timeG = alignChannels(bc, rc)
     bc, timeB = alignChannels(bc, rc)
+    
+    # Original registration order described by Wirth - this fails to properly register blue channel
+    #bc, timeG = alignChannels(bc, gc)
+    #gc, timeB = alignChannels(gc, rc)
+
     # Channel comparisons
     saveImg(rc, f"{oDir}/red.png")
     saveImg(gc, f"{oDir}/green.png")
